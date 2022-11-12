@@ -27,12 +27,14 @@ USE IEEE.STD_LOGIC_UNSIGNED.ALL;
 PACKAGE my_data_types IS
     TYPE MemType2D8 IS ARRAY (INTEGER RANGE <>) OF STD_LOGIC_VECTOR(7 DOWNTO 0);
     TYPE MemType2D16 IS ARRAY (INTEGER RANGE <>) OF STD_LOGIC_VECTOR(15 DOWNTO 0);
+    TYPE MemType2D24 IS ARRAY (INTEGER RANGE <>) OF STD_LOGIC_VECTOR(23 DOWNTO 0);
     TYPE MemType2D32 IS ARRAY (INTEGER RANGE <>) OF STD_LOGIC_VECTOR(31 DOWNTO 0);
-    TYPE MemType2D48 IS ARRAY (INTEGER RANGE <>) OF STD_LOGIC_VECTOR(47 DOWNTO 0);
+    TYPE MemType2D40 IS ARRAY (INTEGER RANGE <>) OF STD_LOGIC_VECTOR(39 DOWNTO 0);
     TYPE MemType3D8 IS ARRAY (INTEGER RANGE <>) OF MemType2D8(0 TO 4);
     TYPE MemType3D16 IS ARRAY (INTEGER RANGE <>) OF MemType2D16(0 TO 4);
+    TYPE MemType3D24 IS ARRAY (INTEGER RANGE <>) OF MemType2D24(0 TO 4);
     TYPE MemType3D32 IS ARRAY (INTEGER RANGE <>) OF MemType2D32(0 TO 4);
-    TYPE MemType3D48 IS ARRAY (INTEGER RANGE <>) OF MemType2D48(0 TO 4);
+    TYPE MemType3D40 IS ARRAY (INTEGER RANGE <>) OF MemType2D40(0 TO 4);
 
     FUNCTION "+" (L : MemType2D16; R : MemType2D16) RETURN MemType2D16;
 END PACKAGE my_data_types;
@@ -71,21 +73,21 @@ ENTITY GaussianFilter IS
     PORT (
         CLK                : IN STD_LOGIC;
         filter_valid       : IN STD_LOGIC;
-        filter_data_i      : IN MemType3D16(0 TO 4);
-        filter_data_o      : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+        filter_data_i      : IN MemType3D8(0 TO 4);
+        filter_data_o      : OUT STD_LOGIC_VECTOR(39 DOWNTO 0);
         filteredPixelReady : OUT STD_LOGIC
     );
 END GaussianFilter;
 
 ARCHITECTURE Behavioral OF GaussianFilter IS
-    SIGNAL output_o_Add3Darray        : MemType3D48(0 TO 3) := (OTHERS => (OTHERS => (OTHERS => '0')));
-    SIGNAL output_o_Add3Darray_Layer2 : MemType3D48(0 TO 1) := (OTHERS => (OTHERS => (OTHERS => '0')));
-    SIGNAL output_o_Add3Darray_Layer3 : MemType2D48(0 TO 5) := (OTHERS => (OTHERS => '0'));
-    SIGNAL output_o_Add3Darray_Layer4 : MemType2D32(0 TO 3) := (OTHERS => (OTHERS => '0'));
-    SIGNAL output_o_Add3Darray_Layer5 : MemType2D32(0 TO 1) := (OTHERS => (OTHERS => '0'));
-    SIGNAL output_o_Mul3Darray        : MemType3D32(0 TO 5) := (OTHERS => (OTHERS => (OTHERS => '0')));
+    SIGNAL output_o_Add3Darray        : MemType3D40(0 TO 3) := (OTHERS => (OTHERS => (OTHERS => '0')));
+    SIGNAL output_o_Add3Darray_Layer2 : MemType3D40(0 TO 1) := (OTHERS => (OTHERS => (OTHERS => '0')));
+    SIGNAL output_o_Add3Darray_Layer3 : MemType2D40(0 TO 5) := (OTHERS => (OTHERS => '0'));
+    SIGNAL output_o_Add3Darray_Layer4 : MemType2D40(0 TO 3) := (OTHERS => (OTHERS => '0'));
+    SIGNAL output_o_Add3Darray_Layer5 : MemType2D40(0 TO 1) := (OTHERS => (OTHERS => '0'));
+    SIGNAL output_o_Mul3Darray        : MemType3D24(0 TO 5) := (OTHERS => (OTHERS => (OTHERS => '0')));
     
-    CONSTANT gaussian_coeff           : MemType3D16(0 TO 4)  := (-- extended by 4096
+    CONSTANT gaussian_coeff           : MemType3D16(0 TO 4)  := (-- extended by 4096.
     (x"0000", x"0000", x"0001", x"0000", x"0000"),
     (x"0000", x"002E", x"0157", x"002E", x"0000"),
     (x"0001", x"0157", x"09E6", x"0157", x"0001"),
@@ -101,7 +103,7 @@ ARCHITECTURE Behavioral OF GaussianFilter IS
 
     SIGNAL cntr           : INTEGER   := 0;
 
-    SIGNAL filter_data_o_Reg : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL filter_data_o_Reg : STD_LOGIC_VECTOR(39 DOWNTO 0) := (OTHERS => '0');
 
 BEGIN
 
