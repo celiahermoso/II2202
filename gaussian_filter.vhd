@@ -74,25 +74,32 @@ ENTITY GaussianFilter IS
         CLK                : IN STD_LOGIC;
         filter_valid       : IN STD_LOGIC;
         filter_data_i      : IN MemType3D8(0 TO 4);
-        filter_data_o      : OUT STD_LOGIC_VECTOR(39 DOWNTO 0);
+        filter_data_o      : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
         filteredPixelReady : OUT STD_LOGIC
     );
 END GaussianFilter;
 
 ARCHITECTURE Behavioral OF GaussianFilter IS
-    SIGNAL output_o_Add3Darray        : MemType3D40(0 TO 3) := (OTHERS => (OTHERS => (OTHERS => '0')));
-    SIGNAL output_o_Add3Darray_Layer2 : MemType3D40(0 TO 1) := (OTHERS => (OTHERS => (OTHERS => '0')));
-    SIGNAL output_o_Add3Darray_Layer3 : MemType2D40(0 TO 5) := (OTHERS => (OTHERS => '0'));
-    SIGNAL output_o_Add3Darray_Layer4 : MemType2D40(0 TO 3) := (OTHERS => (OTHERS => '0'));
-    SIGNAL output_o_Add3Darray_Layer5 : MemType2D40(0 TO 1) := (OTHERS => (OTHERS => '0'));
-    SIGNAL output_o_Mul3Darray        : MemType3D24(0 TO 5) := (OTHERS => (OTHERS => (OTHERS => '0')));
+    SIGNAL output_o_Add3Darray        : MemType3D32(0 TO 3) := (OTHERS => (OTHERS => (OTHERS => '0')));
+    SIGNAL output_o_Add3Darray_Layer2 : MemType3D32(0 TO 1) := (OTHERS => (OTHERS => (OTHERS => '0')));
+    SIGNAL output_o_Add3Darray_Layer3 : MemType2D32(0 TO 5) := (OTHERS => (OTHERS => '0'));
+    SIGNAL output_o_Add3Darray_Layer4 : MemType2D32(0 TO 3) := (OTHERS => (OTHERS => '0'));
+    SIGNAL output_o_Add3Darray_Layer5 : MemType2D32(0 TO 1) := (OTHERS => (OTHERS => '0'));
+    SIGNAL output_o_Mul3Darray        : MemType3D16(0 TO 5) := (OTHERS => (OTHERS => (OTHERS => '0')));
     
-    CONSTANT gaussian_coeff           : MemType3D16(0 TO 4)  := (-- extended by 4096.
-    (x"0000", x"0000", x"0001", x"0000", x"0000"),
-    (x"0000", x"002E", x"0157", x"002E", x"0000"),
-    (x"0001", x"0157", x"09E6", x"0157", x"0001"),
-    (x"0000", x"002E", x"0157", x"002E", x"0000"),
-    (x"0000", x"0000", x"0001", x"0000", x"0001"));
+  --  CONSTANT gaussian_coeff           : MemType3D16(0 TO 4)  := (-- extended by 4096.
+  --  (x"0000", x"0000", x"0001", x"0000", x"0000"),
+  --  (x"0000", x"002E", x"0157", x"002E", x"0000"),
+  --  (x"0001", x"0157", x"09E6", x"0157", x"0001"),
+  --  (x"0000", x"002E", x"0157", x"002E", x"0000"),
+  --  (x"0000", x"0000", x"0001", x"0000", x"0001"));
+    
+    CONSTANT gaussian_coeff           : MemType3D8(0 TO 4)  := (-- extended by 400
+    (x"00", x"00", x"00", x"00", x"00"),
+    (x"00", x"05", x"21", x"05", x"00"),
+    (x"00", x"21", x"F7", x"21", x"00"),
+    (x"00", x"05", x"21", x"05", x"00"),
+    (x"00", x"00", x"00", x"00", x"00"));
 
     TYPE states IS (
         S_IDLE,
@@ -103,7 +110,7 @@ ARCHITECTURE Behavioral OF GaussianFilter IS
 
     SIGNAL cntr           : INTEGER   := 0;
 
-    SIGNAL filter_data_o_Reg : STD_LOGIC_VECTOR(39 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL filter_data_o_Reg : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');
 
 BEGIN
 
