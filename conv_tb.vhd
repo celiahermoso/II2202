@@ -5,15 +5,18 @@ use ieee.numeric_std.all;
 USE std.textio.ALL;
 USE IEEE.STD_LOGIC_TEXTIO.ALL;
 
-use work.Convolution_pkg.ALL;
+use work.convolution_pkg.ALL;
 
 entity test is
-  constant img_dim: integer := 128; -- dimensions of input image, assuming square shape
-  constant kernel_dim: integer := 3; -- dimensions of kernel, assuming square shape
-  --constant output_dim: integer := (2**((img_dim - kernel_dim) + 1))-1;
-  constant padding_dim: integer := img_dim + 2;
-  constant input_file_path: string := "D:\0-EIT\KTH\P1\RM\implementation\repo\ImageRawArrayHex.txt";
-  constant output_file_path: string := "D:\0-EIT\KTH\P1\RM\implementation\repo\outArrayHex.txt";
+
+  
+--  constant dog_kernel_2: kernel_type (0 to 4, 0 to 4) := (
+--            (0, 0, 0, 0, 0),
+--            (0, 0, 10, 0, 0),
+--            (0, 10, 231, 10, 0),
+--            (0, 0, 10, 0, 0),
+--            (0, 0, 0, 0, 0));
+  
 end entity;
 
 
@@ -21,28 +24,21 @@ architecture behave of test is
   component convolution is
     generic (padding_d  :integer  := padding_dim;
 	           img_d :integer  := img_dim;
-             k_width  :integer  := kernel_dim;
-             k_height :integer  := kernel_dim);
+             k_d  :integer  := kernel_dim);
     port (clk, en: IN std_logic;
-          img_in: IN img_type (0 to padding_dim-1, 0 to padding_dim-1);
-          kernel_in: IN kernel_type (0 to k_width-1, 0 to k_width-1);
+          img_in: IN img_type (0 to padding_d-1, 0 to padding_d-1);
+          kernel_in: IN kernel_type (0 to k_d-1, 0 to k_d-1);
           ready: OUT std_logic;
           new_img: OUT integer_vector (0 to (img_d)*(img_d)-1));
   end component;
   
+    
+  
   signal clk: std_logic := '0';
   signal output: integer_vector (0 to (img_dim)*(img_dim)-1) := (others => 0);
-  --signal input_img: img_type (0 to img_dim-1, 0 to img_dim-1) := (
-  --        (2, 2, 1, 1, 1, 1),
-  --        (1, 1, 1, 1, 1, 2),
-  --        (2, 2, 1, 1, 1, 1),
-  --  	     (1, 1, 1, 1, 1, 2),
-  --        (3, 3, 1, 1, 1, 1),
-  --        (1, 1, 2, 2, 2, 2));
-  signal input_kernel: kernel_type (0 to kernel_dim-1, 0 to kernel_dim-1) := (
-            (0, 1, 0),
-           (1, -4, 1),
-            (0, 1, 0));
+  signal gauss1, gauss2: integer_vector (0 to (img_dim)*(img_dim)-1) := (others => 0);
+
+  signal input_kernel: kernel_type (0 to kernel_dim-1, 0 to kernel_dim-1) := dog_kernel_1;
   
   signal padded_img: img_type (0 to padding_dim-1, 0 to padding_dim-1) := (others => (others => 0));
   file input_image_file : text open read_mode is input_file_path;
@@ -50,7 +46,7 @@ architecture behave of test is
   type integer_array is array (integer range <>) of integer;
   signal img_proc_flag, padding_flag: std_logic := '0';
   signal int_i: integer_array(0 to (img_dim*img_dim));
-  signal en,ready,done: std_logic := '0';
+  signal en,ready,ready1,ready2,done,gauss_en: std_logic := '0';
 begin
   conv: convolution
         port map(
@@ -61,6 +57,17 @@ begin
           img_in => padded_img,
           kernel_in => input_kernel
         );
+        
+--  conv2: convolution
+--        port map(
+--          en => en,
+--          ready => ready2,
+--          clk => clk,
+--          new_img => gauss2,
+--          img_in => padded_img,
+--          kernel_in => input_kernel2
+--        );
+        
         
   process(img_proc_flag, padding_flag, ready, done)
     variable line_i: line;
@@ -84,9 +91,9 @@ begin
     end if;
     
     if(padding_flag = '1') then
-      for y in 1 to (padding_dim - 2) loop
-        for x in 1 to (padding_dim - 2) loop
-          padded_img(y,x) <= int_i((y-1)*img_dim + (x-1));
+      for y in padding_size to (padding_dim - padding_size)-1 loop
+        for x in padding_size to (padding_dim - padding_size)-1 loop
+          padded_img(y,x) <= int_i((y-padding_size)*img_dim + (x-padding_size));
         end loop;
       end loop;
       padding_flag <= '0';
@@ -112,7 +119,6 @@ begin
  	  end if;
   end process;
   clk <= not clk after 5 ns;
-  
-  
+  --gauss_en <= ready1 and ready2;
   
 end behave;
