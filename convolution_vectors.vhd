@@ -5,19 +5,21 @@ use work.convolution_pkg.ALL;
 
 use IEEE.std_logic_arith.all;
 
-entity convolution is
+entity vec_convolution is
     generic (--padding_d  :integer;
 	           --img_d :integer;
              k_d  :integer); -- kernel dimension
     port (clk, en: IN std_logic;
-          img_in: IN img_type (0 to k_d-1, 0 to k_d-1); -- input image array
-          kernel_in: IN kernel_type (0 to k_d-1, 0 to k_d-1); -- input kernel array
+          img_in_1: IN integer_vector (0 to k_d-1); -- input image array
+          img_in_2: IN integer_vector (0 to k_d-1);
+          img_in_3: IN integer_vector (0 to k_d-1);
+          kernel_in: IN integer_vector (0 to (k_d*k_d)-1); -- input kernel array
           ready: OUT std_logic;
           --new_img: OUT integer_vector (0 to (img_d)*(img_d)-1)); -- output image
           new_img: OUT integer);
-end convolution;
+end vec_convolution;
 
-architecture behavioral of convolution is
+architecture behavioral of vec_convolution is
 
 
 --signal krnl: kernel_type(0 to k_d-1, 0 to k_d-1);
@@ -49,13 +51,14 @@ BEGIN
       --rdy <= '1';   
       --end if;
       sum := 0;
-      for y in 0 to (k_d-1) loop
-        for x in 0 to (k_d-1) loop
-          sum := sum + img_in(y,x) * kernel_in(y,x);
-        end loop;
+      for i in 0 to k_d-1 loop
+          sum := sum + img_in_1(i) * kernel_in(i);
+          sum := sum + img_in_2(i) * kernel_in(i + k_d);
+          sum := sum + img_in_3(i) * kernel_in(i + 2*k_d);
       end loop;
       new_img <= sum;
       rdy <= not rdy;
     end if;
     end process;
 end Behavioral;
+
