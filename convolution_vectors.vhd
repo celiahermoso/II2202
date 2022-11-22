@@ -2,7 +2,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 use work.convolution_pkg.ALL;
-
+USE std.textio.ALL;
+USE IEEE.STD_LOGIC_TEXTIO.ALL;
 use IEEE.std_logic_arith.all;
 
 entity vec_convolution is
@@ -25,12 +26,14 @@ architecture behavioral of vec_convolution is
 --signal krnl: kernel_type(0 to k_d-1, 0 to k_d-1);
 --signal img: img_type(0 to padding_d-1, 0 to padding_d-1);
 signal rdy: std_logic := '0';
-
+--file output_image_file : text open write_mode is output_file_path;
+--signal new_hex_out_vector: std_logic_vector(15 downto 0) := (others => '0');
 BEGIN   
     --krnl <= kernel_in;
     --img <= img_in;
     ready <= rdy;
     process (clk,en)--,rdy)
+    variable line_i: line;
     variable sum :integer 	:= 0;
     --variable n_i_width:integer  := padding_d - (k_d - 1);
     --variable n_i_height:integer := padding_d - (k_d - 1);
@@ -57,7 +60,7 @@ BEGIN
           sum := sum + img_in_3(i) * kernel_in(i + 2*k_d);
       end loop;
       new_img <= sum;
-      rdy <= not rdy;
+      rdy <= '1';
     end if;
     end process;
 end Behavioral;
