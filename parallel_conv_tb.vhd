@@ -39,7 +39,8 @@ architecture parallel of test is
   signal img_proc_flag, padding_flag: std_logic := '0';
   signal en,ready,done: std_logic := '0';
   
-  --Chunk of the image that is going to be parallelized
+  
+--Chunk of the image that is going to be parallelized
   signal image_slice: img_type(0 to kernel_dim-1, 0 to kernel_dim -1) := (others => (others => 0));
   --Vector containing the pixels of the processed image
   signal new_conv_out_vector: integer_vector(0 to (img_dim*img_dim)-1) := (others => 0);
@@ -87,6 +88,7 @@ process(img_proc_flag, padding_flag, ready, done)
     
   begin
     --Read pixels values from file
+
     if(img_proc_flag = '0') then
       while not endfile(input_image_file) loop
         readline(input_image_file, line_i);

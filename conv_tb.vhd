@@ -85,7 +85,7 @@ begin
     variable hex_out: std_logic_vector(15 downto 0) := (others => '0');
     --variable int_i: integer_array(0 to (128*128));  
     variable idx: integer := 0;
-    
+    variable out_row: line;
     variable padded_img: img_type (0 to padding_dim-1, 0 to padding_dim-1) := (others => (others => 0));
     variable int_i: integer_array(0 to (img_dim*img_dim));
     
@@ -141,15 +141,15 @@ begin
  	  end if;
  	  
  	  
--- 	  if(ready = '1' and done = '0') then
--- 	    en <= '0';
--- 	    for oi in 0 to (img_dim * img_dim)-1 loop
--- 	      hex_out := std_logic_vector(to_signed(output(oi), 16));
--- 	      hwrite(out_row, hex_out);
--- 	      writeline(output_image_file, out_row);
--- 	    end loop;
--- 	    done <= '1';
--- 	  end if;
+ 	  if(ready = '1' and done = '0') then
+ 	    en <= '0';
+ 	    for oi in 0 to (img_dim * img_dim)-1 loop
+	      hex_out := std_logic_vector(to_signed(output(oi), 16));
+ 	      hwrite(out_row, hex_out);
+ 	      writeline(output_image_file, out_row);
+ 	    end loop;
+ 	    done <= '1';
+ 	  end if;
   end process;
   
   
@@ -169,7 +169,7 @@ begin
  	      hwrite(out_row, new_hex_out);
  	      writeline(output_image_file, out_row);
  	      if(id_y = img_dim and id_x = img_dim - 1) then
- 	        done <= '1';
+ 	        done <= '0';
  	      elsif(id_x = img_dim - 1) then
  	        id_y <= id_y + 1;
  	        id_x <= 0;

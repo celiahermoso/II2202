@@ -55,7 +55,7 @@ BEGIN
         end loop;
       end loop;
       new_img <= sum;
-      rdy <= not rdy;
+      rdy <= '1';
     end if;
     end process;
 end Behavioral;
