@@ -69,22 +69,22 @@ architecture behave of top is
   signal output_pixel: integer;
   
   
-  signal input_image_read: std_logic_vector(15 downto 0);
-  signal input_image_write: std_logic_vector(15 downto 0);
+  signal input_image_read: std_logic_vector(15 downto 0); -- output of input ram
+  signal input_image_write: std_logic_vector(15 downto 0); -- input of input ram
   
-  signal output_image_read: std_logic_vector(15 downto 0);
-  signal output_image_write: std_logic_vector(15 downto 0);
+  signal output_image_read: std_logic_vector(15 downto 0); -- output of output ram
+  signal output_image_write: std_logic_vector(15 downto 0); -- input of output ram
   
-  signal input_image_address: std_logic_vector(14 downto 0);
-  signal output_image_address: std_logic_vector(13 downto 0);
+  signal input_image_address: std_logic_vector(14 downto 0); -- address of input ram
+  signal output_image_address: std_logic_vector(13 downto 0); -- address of output ram
   
-  signal iwren, irden, owren: std_logic := '0';
+  signal iwren, irden, owren: std_logic := '0'; --input write enable, input read enable, output write enable
   
-  signal top_state, next_state: states;
-  signal conv_ready: std_logic := '0';
-  signal y, x, idx: integer;
-  signal ready_sig: std_logic := '0';
-  signal halt: std_logic := '0';
+  signal top_state, next_state: states; -- useless
+  signal conv_ready: std_logic := '0'; -- convolution is done on a valid part, conv ready = 1
+  signal y, x, idx: integer; -- useless
+  signal ready_sig: std_logic := '0'; -- ready with the whole image
+  signal halt: std_logic := '0'; --
   signal write_output: std_logic:= '0';
   
   begin
