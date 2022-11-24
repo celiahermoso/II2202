@@ -44,31 +44,49 @@ architecture parallel of test is
   signal image_slice: img_type(0 to kernel_dim-1, 0 to kernel_dim -1) := (others => (others => 0));
   --Vector containing the pixels of the processed image
   signal new_conv_out_vector: integer_vector(0 to (img_dim*img_dim)-1) := (others => 0);
-  --
+  --Each iteration fills the ready_vector with a 1 to enable the copying of all the values to the output file
   signal ready_vector: std_logic_vector(0 to (img_dim*img_dim)-1):= (others => '0');
   
  -- signal id_x, id_y: integer := 0;
   
 begin
-  
-  
-  CONV_G: for i in 0 to (img_dim*img_dim)-1 generate
-    begin
-        conv: vec_convolution
-        port map(
-          en => en,
-          ready => ready_vector(i),
-          clk => clk,
+    
+ --CONV_G: for i in 0 to (img_dim*img_dim)-1 generate
+   -- begin
+     --   conv: vec_convolution
+       -- port map(
+         -- en => en,
+         -- ready => ready_vector(i),
+         -- clk => clk,
           --new_img => output,
-          new_img => new_conv_out_vector(i),
-          img_in_1 => sig_padded_img(i to i + kernel_dim-1),
-          img_in_2 => sig_padded_img(i + padding_dim to i + padding_dim + kernel_dim-1),
-          img_in_3 => sig_padded_img(i + 2*padding_dim to i + 2*padding_dim + kernel_dim-1),
-          kernel_in => input_kernel
-        );
-    end generate;
+         -- new_img => new_conv_out_vector(i),
+         -- img_in_1 => sig_padded_img(i + 0*padding_dim to i + 0*padding_dim + kernel_dim-1),
+          --img_in_2 => sig_padded_img(i + 1*padding_dim to i + 1*padding_dim + kernel_dim-1),
+         -- img_in_3 => sig_padded_img(i + 2*padding_dim to i + 2*padding_dim + kernel_dim-1),
+          --kernel_in => input_kernel
+       -- );
+    --end generate;*/
+    
+   CONV_G1: for j in 0 to img_dim-1 generate
+    CONV_G2:  for i in 0 to img_dim-1 generate
+                --i_padded := i;
+                begin
+                conv: vec_convolution
+                port map(
+                  en => en,
+                  ready => ready_vector(j*img_dim + i),
+                  clk => clk,
+                  new_img => new_conv_out_vector(j*img_dim + i),
+                  img_in_1 => sig_padded_img(j*padding_dim + i + 0*padding_dim to j*padding_dim + i + 0*padding_dim + kernel_dim-1),
+                  img_in_2 => sig_padded_img(j*padding_dim + i + 1*padding_dim to j*padding_dim + i + 1*padding_dim + kernel_dim-1),
+                  img_in_3 => sig_padded_img(j*padding_dim + i + 2*padding_dim to j*padding_dim + i + 2*padding_dim + kernel_dim-1),
+                  kernel_in => input_kernel
+                  );
+              end generate;
+              
+            end generate;
   
-process(img_proc_flag, padding_flag, ready, done)
+process(img_proc_flag, padding_flag, ready_vector, done)
     --To read and write lines in the input/output files 
     variable line_i: line;
     variable out_row: line;
@@ -82,7 +100,6 @@ process(img_proc_flag, padding_flag, ready, done)
     variable padded_img: img_type (0 to padding_dim-1, 0 to padding_dim-1) := (others => (others => 0));
     --Integers decimal values of the pixels of the image that is going to be processed
     variable int_i: integer_array(0 to (img_dim*img_dim));
-    
     --variable int_i: integer_array(0 to (128*128));  
     --variable vec_idx: integer := 0;
     
@@ -106,7 +123,7 @@ process(img_proc_flag, padding_flag, ready, done)
     if(padding_flag = '1') then
       for y in padding_size to (padding_dim - padding_size)-1 loop
         for x in padding_size to (padding_dim - padding_size)-1 loop
-          padded_img(y,x) := int_i((y-padding_size)*img_dim + (x-padding_size)); 
+          padded_img(x,y) := int_i((y-padding_size)*img_dim + (x-padding_size)); 
         end loop;
       end loop;
       padding_flag <= '0'; --It is not allowed to do the padding as it has already been done 
@@ -120,19 +137,20 @@ process(img_proc_flag, padding_flag, ready, done)
 	    --Assignment from VARIABLE padded_img 2D array to SIGNAL INTEGER_VECTOR sig_padded_img
 	    for y in 0 to padding_dim-1 loop
         for x in 0 to padding_dim-1 loop
-          sig_padded_img(y*padding_dim + x) <= padded_img(y,x); --From 2D to 1D
+          sig_padded_img(y*padding_dim + x) <= padded_img(x,y); --From 2D to 1D
         end loop;
       end loop;
       en <= '1';
       --ready <= '1';
  	  end if;
  	  
+
  	  --Write output pixels of the processed image to a file in hexadecimal format
- 	  if(ready = '1' and done = '0') then
+ 	  if(ready_vector = (ready_vector'range => '1') and done = '0') then
  	    en <= '0';
  	    for oi in 0 to (img_dim * img_dim)-1 loop
  	       hex_out := std_logic_vector(to_signed(new_conv_out_vector(oi),16));
- 	       --hex_out := conv_signed(new_conv_out_vector(oi),32);
+ 	       --hex_out := conv_signed(new_conv_out_vector(oi),16);
  	       hwrite(out_row, hex_out);
  	       writeline(output_image_file, out_row);
  	     end loop;
