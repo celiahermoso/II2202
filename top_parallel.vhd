@@ -63,14 +63,15 @@ architecture behave of top_parallel is
   --Laplacian kernel
   signal input_kernel: integer_vector (0 to (kernel_dim*kernel_dim)-1) := (0, 1, 0, 1, -4, 1, 0, 1, 0); 
   --HUGE array where the input image from fake memory is going to be loaded
-  signal array_input_image: integer_vector (0 to img_dim*img_dim-1) := (others => 0);
+  signal array_input_image: integer_vector (0 to padding_dim*padding_dim-1) := (others => 0);
   --Slices of the image that are input to the vec_convolution
-  signal image_slice_1: integer_vector (0 to k_d-1) := (others => 0);
-  signal image_slice_2: integer_vector (0 to k_d-1) := (others => 0);
-  signal image_slice_3: integer_vector (0 to k_d-1) := (others => 0);
-  --Output image
-  signal output_pixel: integer;
-  --
+  --signal image_slice_1: integer_vector (0 to k_d-1) := (others => 0);
+  --signal image_slice_2: integer_vector (0 to k_d-1) := (others => 0);
+  --signal image_slice_3: integer_vector (0 to k_d-1) := (others => 0);
+  
+  --Vector containing the pixels of the processed image
+  signal new_conv_out_vector: integer_vector(0 to (img_dim*img_dim)-1) := (others => 0);
+  
   signal input_image_read: std_logic_vector(15 downto 0);
   signal input_image_write: std_logic_vector(15 downto 0);
   
@@ -82,7 +83,7 @@ architecture behave of top_parallel is
   
   signal iwren, irden, owren: std_logic := '0';
   
-  signal conv_ready: std_logic := '0';
+  signal conv_ready: std_logic_vector(0 to (img_dim*img_dim)-1):= (others => '0');
   
   signal ready_sig: std_logic := '0';
   
@@ -111,25 +112,33 @@ begin
 		);
   
   
-    conv: vec_convolution
-        generic map(
-          k_d => k_d
-        )
-        port map(
-          en => en,
-          ready => conv_ready,
-          clk => clk,
-          new_img => output_pixel,
-          img_in_1 => image_slice_1,
-          img_in_2 => image_slice_2,
-          img_in_3 => image_slice_3,
-          kernel_in => input_kernel
-        );
+  --Generate block like in the convolution_vectors testbench
+   CONV_G1: for j in 0 to img_dim-1 generate
+    CONV_G2:  for i in 0 to img_dim-1 generate
+                --i_padded := i;
+                begin
+                conv: vec_convolution
+                generic map(
+                  k_d => kernel_dim
+                )
+                port map(
+                  en => en,
+                  ready => conv_ready(j*img_dim + i),
+                  clk => clk,
+                  new_img => new_conv_out_vector(j*img_dim + i),
+                  img_in_1 => array_input_image(j*padding_dim + i + 0*padding_dim to j*padding_dim + i + 0*padding_dim + k_d-1),
+                  img_in_2 => array_input_image(j*padding_dim + i + 1*padding_dim to j*padding_dim + i + 1*padding_dim + k_d-1),
+                  img_in_3 => array_input_image(j*padding_dim + i + 2*padding_dim to j*padding_dim + i + 2*padding_dim + k_d-1),
+                  kernel_in => input_kernel
+                  );
+              end generate;
+            end generate;
 		  
 	ready <= ready_sig;
 	
 	process(reset,clk)
 	  --check when it updates
+	  variable input_idx: integer := 0;
 	  variable output_idx: integer := 0;
 	  begin
 	  if(reset = '1') then
@@ -145,34 +154,38 @@ begin
 			output_image_address <= (others => '0');
 		elsif(rising_edge(clk)) then
 		  --Copyimg from the RAM into a huge array
-	  --for i in 0 to (img_dim*img_dim)-1 loop
 	    --No for loops in the input RAM
 	    --signals get assigned when you exit the process
-	    --
-		  input_image_address <= std_logic_vector(to_unsigned(i, 15)); --I need to update i
-		  array_input_image <= conv_integer(IEEE.std_logic_arith.unsigned(input_image_read)); --
-		--end loop;
+		  input_image_address <= std_logic_vector(to_unsigned(input_idx, 15)); --I need to update i
+		  --sig_padded_image is input_image_read because it is done in the preprocessing in MATLAB
+		  array_input_image(input_idx) <= conv_integer(IEEE.std_logic_arith.unsigned(input_image_read)); --
 		   
 		  if(ready_sig = '1') then
 			 output_image_address <= output_image_address;
 			 output_image_write <= output_image_write;
 			 owren <= '0';
-		  elsif(conv_ready = '1') then
+		  elsif(conv_ready = (conv_ready'range => '1')) then  
 			 output_image_address <= std_logic_vector(to_unsigned(output_idx, 14));
-			 output_image_write <= std_logic_vector(to_signed(output_pixel, 16));
+			 output_image_write <= std_logic_vector(to_signed(new_conv_out_vector(output_idx), 16));
 		  else
 			 output_image_address <= output_image_address;
 			 output_image_write <= output_image_write;
 			 owren <= '1';
 		  end if;
-		
-		  if(output_idx = img_dim) then
+		  
+		  --Input image from fake input ram is fully loaded
+		  if(output_idx = img_dim*img_dim-1) then
 		    ready_sig <= ready_sig;
-		  end if;
-		
+		  else 
+		    input_idx := input_idx+1;
+		    output_idx := output_idx+1;
+		    
+		  end if;		
 	 end if;
 		
 	end process; 
 
   
 end behave;
+
+
