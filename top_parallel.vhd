@@ -88,6 +88,7 @@ architecture behave of top_parallel is
   
   signal input_idx: integer:=0;
   signal address_idx: integer:=0;
+  signal output_idx: integer := 0;
   
 
 begin
@@ -141,7 +142,7 @@ begin
 	process(reset,clk)
 	  --check when it updates
 	  --variable input_idx: integer:=0;
-	  variable output_idx: integer := 0;
+	  
 	  begin
 	  if(reset = '1') then
 			en <= '0';
@@ -189,9 +190,10 @@ begin
 		  --Input image from fake input ram is fully loaded
 		  if(input_idx = padding_dim*padding_dim-1) then
 		    ready_sig <= '1';
-		    output_idx := output_idx + 1;
+		   -- output_idx <= output_idx + 1;
 		  else
 		    input_idx <= input_idx+1;
+		    output_idx <= output_idx + 1;
 		    ready_sig <= '0';
 		  end if;		
 		 	  
