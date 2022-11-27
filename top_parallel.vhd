@@ -1,4 +1,3 @@
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
@@ -138,7 +137,8 @@ begin
 	
 	process(reset,clk)
 	  --check when it updates
-	  variable input_idx: integer := 0;
+	  variable input_i: integer := 0;
+	  variable input_j: integer := 0;
 	  variable output_idx: integer := 0;
 	  begin
 	  if(reset = '1') then
@@ -156,9 +156,9 @@ begin
 		  --Copyimg from the RAM into a huge array
 	    --No for loops in the input RAM
 	    --signals get assigned when you exit the process
-		  input_image_address <= std_logic_vector(to_unsigned(input_idx, 15)); --I need to update i
+		  input_image_address <= std_logic_vector(to_unsigned(input_j*padding_dim+input_i, 15)); --I need to update i
 		  --sig_padded_image is input_image_read because it is done in the preprocessing in MATLAB
-		  array_input_image(input_idx) <= conv_integer(IEEE.std_logic_arith.unsigned(input_image_read)); --
+		  array_input_image(input_j*padding_dim+input_i) <= conv_integer(IEEE.std_logic_arith.unsigned(input_image_read)); --
 		   
 		  if(ready_sig = '1') then
 			 output_image_address <= output_image_address;
@@ -175,12 +175,20 @@ begin
 		  
 		  --Input image from fake input ram is fully loaded
 		  if(output_idx = img_dim*img_dim-1) then
-		    ready_sig <= ready_sig;
-		  else 
-		    input_idx := input_idx+1;
+		    --output_idx := output_idx;
+			  ready_sig <= ready_sig;
+		  elsif (input_i < 129) then
+		    input_i := input_i+1;
 		    output_idx := output_idx+1;
-		    
+		    ready_sig <= ready_sig;
+		  elsif (input_i = 129) then
+		    input_i := 0;
+		    input_j := input_j+1; 
+		    output_idx := output_idx+1;
+		    ready_sig <= ready_sig;
 		  end if;		
+		 	  
+		  
 	 end if;
 		
 	end process; 
