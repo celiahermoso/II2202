@@ -90,6 +90,7 @@ architecture behave of top_parallel is
   signal address_idx: integer:=0;
   signal output_idx: integer := 0;
   
+  
 
 begin
 
@@ -142,7 +143,7 @@ begin
 	process(reset,clk)
 	  --check when it updates
 	  --variable input_idx: integer:=0;
-	  
+	
 	  begin
 	  if(reset = '1') then
 			en <= '0';
@@ -160,21 +161,23 @@ begin
 		  --Copyimg from the RAM into a huge array
 	    --No for loops in the input RAM
 	    --signals get assigned when you exit the process
-		  input_image_address <= std_logic_vector(to_unsigned(input_idx, 15)); 
-		  --sig_padded_image is input_image_read because it is done in the preprocessing in MATLAB
-		  array_input_image(address_idx) <= conv_integer(IEEE.std_logic_arith.unsigned(input_image_read));
+	    if(address_idx < padding_dim*padding_dim) then
+		    input_image_address <= std_logic_vector(to_unsigned(input_idx, 15)); 
+		    --sig_padded_image is input_image_read because it is done in the preprocessing in MATLAB
+		    array_input_image(address_idx) <= conv_integer(IEEE.std_logic_arith.unsigned(input_image_read));
+		  else 
+		    address_idx <= address_idx;
+		  end if;
 		   
 		  if(ready_sig = '1') then
-			 output_image_address <= output_image_address;
-			 output_image_write <= output_image_write;
-			 owren <= '0';
-		  elsif(conv_ready = (conv_ready'range => '1')) then  
 			 output_image_address <= std_logic_vector(to_unsigned(output_idx, 14));
 			 output_image_write <= std_logic_vector(to_signed(new_conv_out_vector(output_idx), 16));
+--		 owren <= '0';
+--		  elsif(conv_ready = (conv_ready'range => '1')) then  
 		  else
-			 output_image_address <= output_image_address;
+			 output_imag+e_address <= output_image_address;
 			 output_image_write <= output_image_write;
-			 owren <= '1';
+			 --owren <= '1';
 		  end if;
 		  
 		  if(input_idx < 2) then
@@ -190,16 +193,18 @@ begin
 		  --Input image from fake input ram is fully loaded
 		  if(input_idx = padding_dim*padding_dim-1) then
 		    ready_sig <= '1';
+		    owren <= '1';
+		    if (output_idx < img_dim*img_dim-1) then
+		      output_idx <= output_idx + 1;
+		    else 
+		      owren <= '0';
+		    end if;
 		   -- output_idx <= output_idx + 1;
 		  else
 		    input_idx <= input_idx+1;
-		    output_idx <= output_idx + 1;
 		    ready_sig <= '0';
-		  end if;		
-		 	  
-		  
+		  end if;				  
 	 end if;
-		
 	end process; 
 
   
