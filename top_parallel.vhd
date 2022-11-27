@@ -62,7 +62,7 @@ architecture behave of top_parallel is
   --Laplacian kernel
   signal input_kernel: integer_vector (0 to (kernel_dim*kernel_dim)-1) := (0, 1, 0, 1, -4, 1, 0, 1, 0); 
   --HUGE array where the input image from fake memory is going to be loaded
-  signal array_input_image: integer_vector (0 to padding_dim*padding_dim-1) := (others => 0);
+  signal array_input_image: integer_vector (0 to padding_dim*padding_dim-1) := (others => 1);
   --Slices of the image that are input to the vec_convolution
   --signal image_slice_1: integer_vector (0 to k_d-1) := (others => 0);
   --signal image_slice_2: integer_vector (0 to k_d-1) := (others => 0);
@@ -85,6 +85,9 @@ architecture behave of top_parallel is
   signal conv_ready: std_logic_vector(0 to (img_dim*img_dim)-1):= (others => '0');
   
   signal ready_sig: std_logic := '0';
+  
+  signal input_idx: integer:=0;
+  signal address_idx: integer:=0;
   
 
 begin
@@ -137,8 +140,7 @@ begin
 	
 	process(reset,clk)
 	  --check when it updates
-	  variable input_i: integer := 0;
-	  variable input_j: integer := 0;
+	  --variable input_idx: integer:=0;
 	  variable output_idx: integer := 0;
 	  begin
 	  if(reset = '1') then
@@ -152,13 +154,14 @@ begin
 			output_image_read <= (others => '0');
 			output_image_write <= (others => '0');
 			output_image_address <= (others => '0');
+			array_input_image <= (others => 1);
 		elsif(rising_edge(clk)) then
 		  --Copyimg from the RAM into a huge array
 	    --No for loops in the input RAM
 	    --signals get assigned when you exit the process
-		  input_image_address <= std_logic_vector(to_unsigned(input_j*padding_dim+input_i, 15)); --I need to update i
+		  input_image_address <= std_logic_vector(to_unsigned(input_idx, 15)); 
 		  --sig_padded_image is input_image_read because it is done in the preprocessing in MATLAB
-		  array_input_image(input_j*padding_dim+input_i) <= conv_integer(IEEE.std_logic_arith.unsigned(input_image_read)); --
+		  array_input_image(address_idx) <= conv_integer(IEEE.std_logic_arith.unsigned(input_image_read));
 		   
 		  if(ready_sig = '1') then
 			 output_image_address <= output_image_address;
@@ -173,19 +176,23 @@ begin
 			 owren <= '1';
 		  end if;
 		  
+		  if(input_idx < 2) then
+		    address_idx <= address_idx;
+		  else 
+		    address_idx <= address_idx+1;
+		  end if;
+		  
+		  if(input_idx = 130) then
+		  input_idx <= input_idx;
+		  end if;
+		  
 		  --Input image from fake input ram is fully loaded
-		  if(output_idx = img_dim*img_dim-1) then
-		    --output_idx := output_idx;
-			  ready_sig <= ready_sig;
-		  elsif (input_i < 129) then
-		    input_i := input_i+1;
-		    output_idx := output_idx+1;
-		    ready_sig <= ready_sig;
-		  elsif (input_i = 129) then
-		    input_i := 0;
-		    input_j := input_j+1; 
-		    output_idx := output_idx+1;
-		    ready_sig <= ready_sig;
+		  if(input_idx = padding_dim*padding_dim-1) then
+		    ready_sig <= '1';
+		    output_idx := output_idx + 1;
+		  else
+		    input_idx <= input_idx+1;
+		    ready_sig <= '0';
 		  end if;		
 		 	  
 		  
