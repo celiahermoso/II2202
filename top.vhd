@@ -62,7 +62,7 @@ architecture behave of top is
   signal input_image: img_type (0 to padding_d-1, 0 to padding_d-1) := (others => (others => 0));
   
   
-  signal kernel_in: kernel_type (0 to k_d-1, 0 to k_d-1) := laplacian_kernel;
+  signal kernel_in: kernel_type (0 to k_d-1, 0 to k_d-1) := dog_kernel_1;
   signal output_image: integer_vector (0 to (img_d)*(img_d)-1) := (others => 0);
   signal image_slice: img_type (0 to k_d-1, 0 to k_d-1) := (others => (others => 0));
   
@@ -78,7 +78,8 @@ architecture behave of top is
   signal input_image_address: std_logic_vector(14 downto 0); -- address of input ram
   signal output_image_address: std_logic_vector(13 downto 0); -- address of output ram
   
-  signal iwren, irden, owren: std_logic := '0'; --input write enable, input read enable, output write enable
+  signal iwren, owren: std_logic := '0'; --input write enable, input read enable, output write enable
+  signal irden: std_logic := '1';
   
   signal top_state, next_state: states; -- useless
   signal conv_ready: std_logic := '0'; -- convolution is done on a valid part, conv ready = 1
@@ -89,8 +90,8 @@ architecture behave of top is
   
   begin
    
-    inram: entity work.input_ram(syn)
-	 --inram: entity work.input_ram(fake_memory)
+    --inram: entity work.input_ram(syn)
+	 inram: entity work.input_ram(fake_memory)
 		port map(
 			clock => clk,
 			address => input_image_address,
@@ -134,13 +135,13 @@ architecture behave of top is
 	begin
 		if(reset = '1') then
 			en <= '0';
-			iwren <= '0';
-			irden <= '1';
+			--iwren <= '0';
+			--irden <= '1';
 			owren <= '0';
 			ready_sig <= '0';
 			--conv_ready <= '0';
 			--input_image_read <= (others => '0');
-			input_image_write <= (others => '0');
+			--input_image_write <= (others => '0');
 			input_image_address <= (others => '0');
 			output_image_read <= (others => '0');
 			output_image_write <= (others => '0');

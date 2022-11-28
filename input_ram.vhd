@@ -68,7 +68,7 @@ BEGIN
 		intended_device_family => "Cyclone V",
 		lpm_hint => "ENABLE_RUNTIME_MOD=YES,INSTANCE_NAME=IN",
 		lpm_type => "altsyncram",
-		numwords_a => 17424,
+		numwords_a => 32768,
 		operation_mode => "SINGLE_PORT",
 		outdata_aclr_a => "NONE",
 		outdata_reg_a => "UNREGISTERED",

@@ -80,7 +80,8 @@ architecture behave of top_parallel is
   signal input_image_address: std_logic_vector(14 downto 0);
   signal output_image_address: std_logic_vector(13 downto 0);
   
-  signal iwren, irden, owren: std_logic := '0';
+  signal iwren, owren: std_logic := '0';
+  signal irden: std_logic := '1';
   
   signal conv_ready: std_logic_vector(0 to (img_dim*img_dim)-1):= (others => '0');
   
@@ -94,8 +95,8 @@ architecture behave of top_parallel is
 
 begin
 
-    --inram: entity work.input_ram(syn)
-	  inram: entity work.input_ram(fake_memory)
+    inram: entity work.input_ram(syn)
+	  --inram: entity work.input_ram(fake_memory)
 		port map(
 			clock => clk,
 			address => input_image_address,
@@ -105,8 +106,8 @@ begin
 			q => input_image_read
 		);
 		
-	 --outram: entity work.out_ram(syn)
-	  outram: entity work.out_ram(fake_memory)
+	 outram: entity work.out_ram(syn)
+	  --outram: entity work.out_ram(fake_memory)
 		port map(
 			clock => clk,
 			address => output_image_address,
@@ -146,12 +147,12 @@ begin
 	
 	  begin
 	  if(reset = '1') then
-			en <= '0';
-			iwren <= '0';
-			irden <= '1';
+			--en <= '0';
+			--iwren <= '0';
+			--irden <= '1';
 			owren <= '0';
 			ready_sig <= '0';
-	    input_image_write <= (others => '0');
+	    --input_image_write <= (others => '0');
 			input_image_address <= (others => '0');
 			output_image_read <= (others => '0');
 			output_image_write <= (others => '0');
@@ -175,7 +176,7 @@ begin
 --		 owren <= '0';
 --		  elsif(conv_ready = (conv_ready'range => '1')) then  
 		  else
-			 output_imag+e_address <= output_image_address;
+			 output_image_address <= output_image_address;
 			 output_image_write <= output_image_write;
 			 --owren <= '1';
 		  end if;
@@ -186,9 +187,9 @@ begin
 		    address_idx <= address_idx+1;
 		  end if;
 		  
-		  if(input_idx = 130) then
-		  input_idx <= input_idx;
-		  end if;
+		  --if(input_idx = 22) then
+		  --input_idx <= input_idx;
+		  --end if;
 		  
 		  --Input image from fake input ram is fully loaded
 		  if(input_idx = padding_dim*padding_dim-1) then
