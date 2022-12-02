@@ -39,7 +39,7 @@ architecture behave of test is
   signal output: integer_vector (0 to (img_dim)*(img_dim)-1) := (others => 0);
   signal gauss1, gauss2: integer_vector (0 to (img_dim)*(img_dim)-1) := (others => 0);
 
-  signal input_kernel: kernel_type (0 to kernel_dim-1, 0 to kernel_dim-1) := laplacian_kernel;
+  signal input_kernel: kernel_type (0 to kernel_dim-1, 0 to kernel_dim-1) := dog_kernel_1;
   
   signal sig_padded_img: img_type (0 to padding_dim-1, 0 to padding_dim-1) := (others => (others => 0));
   file input_image_file : text open read_mode is input_file_path;

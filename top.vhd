@@ -62,7 +62,7 @@ architecture behave of top is
   signal input_image: img_type (0 to padding_d-1, 0 to padding_d-1) := (others => (others => 0));
   
   
-  signal kernel_in: kernel_type (0 to k_d-1, 0 to k_d-1) := dog_kernel_1;
+  signal kernel_in: kernel_type (0 to k_d-1, 0 to k_d-1) := dog_kernel;
   signal output_image: integer_vector (0 to (img_d)*(img_d)-1) := (others => 0);
   signal image_slice: img_type (0 to k_d-1, 0 to k_d-1) := (others => (others => 0));
   
@@ -86,12 +86,13 @@ architecture behave of top is
   signal y, x, idx: integer; -- useless
   signal ready_sig: std_logic := '0'; -- ready with the whole image
   signal halt: std_logic := '0'; --
-  signal write_output: std_logic:= '0';
+  signal write_output, write_output_enable: std_logic:= '0';
   
   begin
    
     --inram: entity work.input_ram(syn)
-	 inram: entity work.input_ram(fake_memory)
+	 inram: entity work.input_ram(fake_memory_dog)
+	 --inram: entity work.input_ram(fake_memory_laplacian)
 		port map(
 			clock => clk,
 			address => input_image_address,
@@ -182,7 +183,7 @@ architecture behave of top is
 		  j := 0;
 		else
 		  j := j + 1;
-		  if(j = k_d - 1) then
+		  if(j = 2) then
 		    halt <= '1';
 		  end if;
 		end if;
@@ -192,7 +193,7 @@ architecture behave of top is
 		 img_i := img_i;
 		 img_j := img_j;
 		elsif(halt = '1') then
-		  if(img_i = k_d - 1 and j = k_d - 1) then
+		  if(img_i = k_d - 1 and img_j = k_d - 1) then
 		    img_i := 0;
 		    img_j := 0;
 		    write_output <= '1';
@@ -220,13 +221,18 @@ architecture behave of top is
 		if(output_idx = img_dim) then
 		  ready_sig <= ready_sig;
 		end if;
+		
+		if(write_output = '1') then
+		  write_output <= '0';
+		  write_output_enable <= '1';
+		end if;
 
 		
 		--if(output_idx = (img_dim)*(img_dim)-1) then
 			--output_idx := 0;
 		--	ready_sig <= '1';
 		--else
-		  if(write_output = '1') then
+		  if(write_output_enable = '1') then
 		    if(output_idx = (img_dim)*(img_dim)-1) then
 		       output_idx := output_idx;
 			     ready_sig <= '1';
@@ -240,7 +246,7 @@ architecture behave of top is
 --			 if(output_idx = img_dim-1) then
 	--	    ready_sig <= ready_sig;
 		 -- 	end if;
-          write_output <= '0';
+          write_output_enable <= '0';
 			else
 			   ready_sig <= ready_sig;
 			   output_idx := output_idx;
