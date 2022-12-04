@@ -62,7 +62,7 @@ architecture behave of top is
   signal input_image: img_type (0 to padding_d-1, 0 to padding_d-1) := (others => (others => 0));
   
   
-  signal kernel_in: kernel_type (0 to k_d-1, 0 to k_d-1) := dog_kernel;
+  signal kernel_in: kernel_type (0 to k_d-1, 0 to k_d-1) := laplacian_kernel;
   signal output_image: integer_vector (0 to (img_d)*(img_d)-1) := (others => 0);
   signal image_slice: img_type (0 to k_d-1, 0 to k_d-1) := (others => (others => 0));
   
@@ -91,8 +91,8 @@ architecture behave of top is
   begin
    
     --inram: entity work.input_ram(syn)
-	 inram: entity work.input_ram(fake_memory_dog)
-	 --inram: entity work.input_ram(fake_memory_laplacian)
+	 --inram: entity work.input_ram(fake_memory_dog)
+	 inram: entity work.input_ram(fake_memory_laplacian)
 		port map(
 			clock => clk,
 			address => input_image_address,
@@ -147,6 +147,16 @@ architecture behave of top is
 			output_image_read <= (others => '0');
 			output_image_write <= (others => '0');
 			output_image_address <= (others => '0');
+			--slice_x := 0;
+			----slice_y := 0;
+			output_idx := 0;
+			--i := 0;
+			--j := 0;
+			--img_i := 0;
+			--img_j := 0;
+			--halt <= '0';
+			--write_output <= '0';
+			--write_output_enable <= '0';
 		elsif(rising_edge(clk)) then
       --i := 0 + slice_y;
       --j := 0 + slice_x;

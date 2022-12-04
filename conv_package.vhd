@@ -5,7 +5,7 @@ package convolution_pkg IS
     type img_type is array(integer range <>, integer range <>) of integer;
     
     constant img_dim: integer := 128; -- dimensions of input image, assuming square shape
-    constant kernel_dim: integer := 5; -- dimensions of kernel, assuming square shape
+    constant kernel_dim: integer := 3; -- dimensions of kernel, assuming square shape
     constant padding_dim: integer := img_dim + kernel_dim  - 1; --padded image dimensions, with as many padding layers as necessary
     constant input_file_path: string := "D:\0-EIT\KTH\P1\RM\implementation\repo\ImageRawArrayHex.txt";
     constant output_file_path: string := "D:\0-EIT\KTH\P1\RM\implementation\repo\outArrayHex.txt";

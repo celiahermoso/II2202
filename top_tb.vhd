@@ -31,7 +31,7 @@ architecture top_tb of test is
           );
     
     reset <= '1' after 2 ns, '0' after 4 ns;
-    clk <= not clk after 5 ns;
+    clk <= not clk after 10 ns;
     
     
 
